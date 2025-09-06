@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checklist para Datasets de Observação da Terra</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Slate & Indigo -->
+    <!-- Application Structure Plan: The SPA is designed as an interactive checklist dashboard. The information architecture consists of a two-column layout: a main column with a 5-step accordion checklist, and a sticky side column for displaying detailed context. This structure was chosen to transform the dense report into a task-oriented, actionable guide. Users can interact with the checklist (main task) while receiving immediate, relevant information (context) without losing their place. A progress bar provides overall feedback. This design prioritizes usability and guided learning over the linear structure of the original report. -->
+    <!-- Visualization & Content Choices: 1. Main Process: Interactive Accordion Checklist (HTML/CSS/JS) -> Goal: Organize -> Breaks the complex workflow into 5 main stages and interactive sub-tasks, allowing for progressive disclosure of information. 2. Progress: Dynamic Progress Bar (HTML/CSS/JS) -> Goal: Inform -> Provides immediate visual feedback on the user's progress through the checklist. 3. Detailed Information: Contextual Side Panel (JS) -> Goal: Inform/Explain -> Displays curated summaries from the report related to the selected checklist item, providing "just-in-time" learning. 4. Key Concepts: Styled "Pro Tip" cards (HTML/CSS) -> Goal: Inform -> Highlights crucial advice from the report for better retention. All elements are built with structured HTML, avoiding SVG/Mermaid. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+        .task-checkbox:checked + label {
+            text-decoration: line-through;
+            color: #64748b;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+        .accordion-content.open {
+            max-height: 500px;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+        .detail-card {
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+        }
+        .detail-card.loading {
+            transform: scale(0.98);
+            opacity: 0.6;
+        }
+        .progress-bar-fill {
+            transition: width 0.4s ease-in-out;
+        }
+    </style>
+</head>
+<body class="text-slate-700">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Checklist Estratégico para Datasets de EO</h1>
+            <p class="mt-2 text-lg text-slate-600 max-w-3xl mx-auto">Um guia interativo para a criação de datasets de Observação da Terra de alta qualidade, prontos para IA.</p>
+        </header>
+
+        <div class="sticky top-0 z-10 py-4 bg-f1f5f9/80 backdrop-blur-sm mb-8">
+            <div class="w-full bg-slate-200 rounded-full h-4">
+                <div id="progress-bar" class="progress-bar-fill bg-indigo-600 h-4 rounded-full text-center text-white text-xs leading-4" style="width: 0%;"></div>
+            </div>
+            <p id="progress-text" class="text-center text-sm font-medium text-slate-600 mt-2">0% Completo</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <main id="checklist-container" class="lg:col-span-2 space-y-4">
+            </main>
+
+            <aside id="details-panel-container" class="lg:sticky top-28 h-fit">
+                <div id="details-panel" class="bg-white p-6 rounded-lg shadow-md">
+                     <div class="text-center">
+                        <span class="text-2xl">💡</span>
+                        <h3 class="text-xl font-bold text-slate-800 mt-2">Bem-vindo!</h3>
+                        <p class="mt-2 text-slate-600">Selecione uma tarefa no checklist à esquerda para ver os detalhes, as melhores práticas e dicas estratégicas extraídas da análise do relatório.</p>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const checklistData = [
+            {
+                id: 'step1',
+                title: 'Fase 1: Definição do Problema e Estratégia Data-Centric',
+                tasks: [
+                    { id: '1-1', label: 'Formalizar o Problema de Negócio/Ciência', content: { title: 'Formalizar o Problema', text: `O ponto de partida é a definição clara do que se pretende que o modelo de IA aprenda. Esta definição orienta todas as decisões subsequentes, desde a escolha dos dados até à metodologia de anotação.`, proTip: `Em vez de focar-se apenas no algoritmo, adote uma mentalidade de "IA Centrada em Dados". A melhoria sistemática da qualidade dos dados oferece ganhos de desempenho mais significativos.` } },
+                    { id: '1-2', label: 'Definir Métricas de Qualidade dos Dados', content: { title: 'Métricas de Qualidade', text: `A qualidade dos dados é o pilar da IA Centrada em Dados. É crucial evitar erros, outliers e ruído ("garbage-in-garbage-out"). A validação da qualidade deve ser um processo contínuo.`, proTip: `Avalie o seu dataset com base em 5 critérios: Precisão, Completude, Consistência, Atualidade e Validade.` } },
+                    { id: '1-3', label: 'Analisar Requisitos de Quantidade e Representatividade', content: { title: 'Quantidade e Representatividade', text: `Modelos de deep learning necessitam de grandes volumes de dados. O dataset deve ser "representativo" de todos os fenómenos de interesse, incluindo exemplos de diferentes regiões, condições de iluminação e estações do ano para garantir a generalização do modelo.`, proTip: `A anotação manual é cara. Use este facto para planear uma estratégia de aquisição que maximize a diversidade do dataset dentro das restrições orçamentais.` } },
+                    { id: '1-4', label: 'Planear o Versionamento e a Linhagem dos Dados', content: { title: 'Versionamento e Linhagem (Provenance)', text: `Trate o seu dataset como um produto de engenharia. É fundamental documentar de forma transparente toda a cadeia de processamento (linhagem) e versionar o dataset, tal como se faz com código-fonte.`, proTip: `Use ferramentas de MLOps que suportem o versionamento de dados para garantir a reprodutibilidade e a manutenção dos modelos em produção.` } },
+                ]
+            },
+            {
+                id: 'step2',
+                title: 'Fase 2: Aquisição e Seleção de Dados',
+                tasks: [
+                    { id: '2-1', label: 'Selecionar Plataformas de Dados (Cloud vs. Local)', content: { title: 'Seleção de Plataformas', text: `A aquisição de dados evoluiu do download manual para plataformas na nuvem. A tendência é irreversível: migrar a "computação para junto dos dados" em vez de mover petabytes pela internet.`, proTip: `Priorize plataformas como o Copernicus Data Space Ecosystem (CDSE) e o Google Earth Engine (GEE). A proficiência nas suas APIs é uma competência essencial.` } },
+                    { id: '2-2', label: 'Escolher os Sensores Apropriados (e.g., Sentinel, Landsat)', content: { title: 'Escolha de Sensores', text: `A escolha do sensor é crucial. Embora o programa Sentinel seja um excelente ponto de partida, considere a fusão de dados de múltiplas fontes para resolver problemas complexos.`, proTip: `Combine dados SAR (Sentinel-1) para informação estrutural com dados óticos (Sentinel-2) para informação espectral. Para análises de longo prazo, use o arquivo Landsat.` } },
+                    { id: '2-3', label: 'Definir a Área de Interesse (AOI) e o Período Temporal', content: { title: 'Definir AOI e Período', text: `Utilizando as APIs das plataformas na nuvem, defina a sua área de interesse geométrica e filtre as coleções de imagens por intervalo de tempo e outros metadados relevantes, como a cobertura de nuvens.`, proTip: `O GEE é a principal ferramenta para a aquisição automatizada e programática de dados em grande escala, permitindo a criação de pipelines de dados robustos.` } },
+                    { id: '2-4', label: 'Implementar Scripts para Aquisição Automática', content: { title: 'Aquisição Automática', text: `Para datasets de grande escala, a aquisição manual é impraticável. Utilize as APIs Python ou JavaScript do GEE ou as APIs do CDSE (Sentinel Hub, openEO) para automatizar o download ou o processamento na nuvem.`, proTip: `O paradigma mudou de "descarregar e processar" para executar o seu código diretamente na nuvem, onde os dados residem. Invista na aprendizagem destas ferramentas.` } }
+                ]
+            },
+            {
+                id: 'step3',
+                title: 'Fase 3: Pré-processamento dos Dados',
+                tasks: [
+                    { id: '3-1', label: 'Realizar Correção Atmosférica', content: { title: 'Correção Atmosférica', text: `Os dados brutos de satélite são afetados pela atmosfera. A correção atmosférica remove efeitos como a névoa, permitindo obter a reflectância real da superfície, um passo essencial para análises científicas rigorosas.`, proTip: `Plataformas como o GEE oferecem coleções de dados já pré-processadas (e.g., Sentinel-2 Surface Reflectance), o que pode poupar um tempo de processamento significativo.` } },
+                    { id: '3-2', label: 'Aplicar Calibração Radiométrica', content: { title: 'Calibração Radiométrica', text: `Este processo converte os valores de pixel brutos do sensor em unidades físicas padronizadas (e.g., radiância ou reflectância). Isto torna as imagens de diferentes datas ou sensores comparáveis entre si.`, proTip: `A ferramenta SNAP da ESA é poderosa para um pré-processamento detalhado no desktop, mas para grandes volumes, utilize as capacidades de processamento das plataformas na nuvem.` } },
+                    { id: '3-3', label: 'Executar Co-registo de Imagens (se aplicável)', content: { title: 'Co-registo de Imagens', text: `Para análises de séries temporais ou deteção de alterações, é crucial que os pixels de imagens da mesma área, mas de datas diferentes, estejam perfeitamente alinhados. O co-registo garante este alinhamento.`, proTip: `Os *foundation models* espácio-temporais, como o Prithvi-EO, são projetados para lidar nativamente com dados de séries temporais, simplificando este desafio.` } }
+                ]
+            },
+            {
+                id: 'step4',
+                title: 'Fase 4: Anotação (Criação do Ground Truth)',
+                tasks: [
+                    { id: '4-1', label: 'Definir o Tipo de Anotação (Classificação, Deteção, Segmentação)', content: { title: 'Definir Tipo de Anotação', text: `A forma como os dados são rotulados define o que o modelo aprenderá. A tarefa determina a metodologia: rótulos de imagem inteira (Classificação), caixas delimitadoras (Deteção) ou máscaras pixel a pixel (Segmentação).`, proTip: `A segmentação semântica é a tarefa mais intensiva em termos de anotação, mas fornece a informação mais rica.` } },
+                    { id: '4-2', label: 'Selecionar a Ferramenta de Anotação Apropriada', content: { title: 'Selecionar Ferramenta de Anotação', text: `A escolha da ferramenta é uma decisão estratégica. Para projetos de EO, o suporte a formatos geoespaciais (GeoTIFF) é um grande diferencial.`, proTip: `Priorize plataformas como Labelbox ou Encord pelo seu suporte geoespacial nativo e CVAT pela sua versatilidade open-source. Ferramentas como LabelImg são boas para começar com deteção de objetos.` } },
+                    { id: '4-3', label: 'Implementar um Fluxo de Trabalho de Controlo de Qualidade (QA)', content: { title: 'Implementar Controlo de Qualidade', text: `A consistência das anotações é vital. Utilize fluxos de trabalho de QA, com múltiplos revisores e métricas de consenso, para garantir a alta qualidade dos rótulos.`, proTip: `Plataformas de nível empresarial como Labelbox e Encord oferecem funcionalidades avançadas de gestão de equipas e QA, essenciais para projetos em larga escala.` } },
+                    { id: '4-4', label: 'Utilizar Anotação Assistida por IA (Human-in-the-Loop)', content: { title: 'Anotação Assistida por IA', text: `A anotação está a evoluir de um processo manual para um aumentado por IA. Um modelo pré-treinado gera uma primeira passagem de anotações, e o anotador humano foca-se na validação e correção.`, proTip: `Este ciclo, conhecido como Human-in-the-Loop (HITL), pode aumentar a eficiência da anotação exponencialmente. Escolha ferramentas que integrem esta funcionalidade.` } }
+                ]
+            },
+            {
+                id: 'step5',
+                title: 'Fase 5: Validação, Aumento e Finalização',
+                tasks: [
+                    { id: '5-1', label: 'Validar o Equilíbrio de Classes', content: { title: 'Equilíbrio de Classes', text: `Muitos datasets de EO são "fortemente desequilibrados", com classes de interesse raras (e.g., áreas de desastre). Se não for tratado, o modelo ficará enviesado para a classe maioritária.`, proTip: `Utilize técnicas de reamostragem (oversampling da classe minoritária, undersampling da maioritária) ou use modelos generativos (GANs, Diffusion) para criar dados sintéticos para as classes raras.` } },
+                    { id: '5-2', label: 'Aplicar Aumento de Dados (Data Augmentation)', content: { title: 'Aumento de Dados', text: `Aumente artificialmente o tamanho do seu dataset aplicando transformações às imagens. Para imagens de satélite, transformações geométricas (rotações, flips) são geralmente benéficas.`, proTip: `Seja cauteloso com transformações de cor (brilho, contraste), pois podem alterar a informação espectral, que é um sinal crucial para a classificação.` } },
+                    { id: '5-3', label: 'Dividir o Dataset (Treino, Validação, Teste)', content: { title: 'Divisão do Dataset', text: `Divida o seu conjunto de dados final em três partes distintas: treino (para o modelo aprender), validação (para ajustar hiperparâmetros) e teste (para avaliar o desempenho final de forma imparcial).`, proTip: `Em dados geoespaciais, evite divisões aleatórias que possam levar a "fugas de dados" (data leakage) devido à autocorrelação espacial. Use divisões geográficas (e.g., por país ou região).` } },
+                    { id: '5-4', label: 'Finalizar a Documentação (Princípios FAIR)', content: { title: 'Finalizar Documentação', text: `Documente o seu dataset de forma exaustiva para que seja Encontrável, Acessível, Interoperável e Reutilizável (FAIR). Inclua metadados ricos, formatos abertos e licenciamento claro.`, proTip: `Um bom dataset é um produto científico em si mesmo. A sua documentação e partilha potenciam o avanço de toda a comunidade.` } }
+                ]
+            }
+        ];
+
+        const checklistContainer = document.getElementById('checklist-container');
+        const detailsPanel = document.getElementById('details-panel');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        
+        let totalTasks = 0;
+        
+        checklistData.forEach(step => {
+            const accordionItem = document.createElement('div');
+            accordionItem.className = 'bg-white rounded-lg shadow-md overflow-hidden';
+
+            let tasksHtml = '';
+            step.tasks.forEach(task => {
+                tasksHtml += `
+                    <div class="flex items-center p-3 hover:bg-slate-50 border-t border-slate-200">
+                        <input type="checkbox" id="${task.id}" data-content='${JSON.stringify(task.content)}' class="task-checkbox h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                        <label for="${task.id}" class="ml-3 text-slate-700 cursor-pointer flex-1">${task.label}</label>
+                    </div>
+                `;
+                totalTasks++;
+            });
+
+            accordionItem.innerHTML = `
+                <button class="accordion-header w-full flex justify-between items-center p-4 text-left">
+                    <h2 class="text-xl font-semibold text-slate-800">${step.title}</h2>
+                    <span class="transform transition-transform duration-300">
+                        <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </span>
+                </button>
+                <div class="accordion-content bg-slate-50 px-4">
+                   ${tasksHtml}
+                </div>
+            `;
+            checklistContainer.appendChild(accordionItem);
+        });
+        
+        const accordions = checklistContainer.querySelectorAll('.accordion-header');
+        accordions.forEach(accordion => {
+            accordion.addEventListener('click', () => {
+                const content = accordion.nextElementSibling;
+                const icon = accordion.querySelector('span');
+                
+                accordion.parentElement.parentElement.querySelectorAll('.accordion-content').forEach(c => {
+                    if (c !== content) {
+                        c.classList.remove('open');
+                        c.previousElementSibling.querySelector('span').classList.remove('rotate-180');
+                    }
+                });
+                
+                content.classList.toggle('open');
+                icon.classList.toggle('rotate-180');
+            });
+        });
+
+        const checkboxes = document.querySelectorAll('.task-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                updateProgress();
+                updateDetailsPanel(checkbox);
+            });
+            checkbox.addEventListener('click', () => {
+                updateDetailsPanel(checkbox);
+            });
+        });
+        
+        function updateProgress() {
+            const checkedTasks = document.querySelectorAll('.task-checkbox:checked').length;
+            const percentage = Math.round((checkedTasks / totalTasks) * 100);
+            progressBar.style.width = `${percentage}%`;
+            progressBar.textContent = `${percentage}%`;
+            progressText.textContent = `${percentage}% Completo (${checkedTasks} de ${totalTasks} tarefas)`;
+        }
+
+        let lastSelectedCheckbox = null;
+        function updateDetailsPanel(checkbox) {
+            if (lastSelectedCheckbox) {
+                lastSelectedCheckbox.parentElement.classList.remove('bg-indigo-50');
+            }
+
+            const content = JSON.parse(checkbox.dataset.content);
+            detailsPanel.classList.add('loading');
+
+            setTimeout(() => {
+                detailsPanel.innerHTML = `
+                    <h3 class="text-xl font-bold text-slate-900 mb-4">${content.title}</h3>
+                    <p class="text-slate-600 mb-6">${content.text}</p>
+                    <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r-lg">
+                        <h4 class="font-semibold text-indigo-800">Pro Tip</h4>
+                        <p class="text-sm text-indigo-700 mt-1">${content.proTip}</p>
+                    </div>
+                `;
+                detailsPanel.classList.remove('loading');
+            }, 200);
+
+            checkbox.parentElement.classList.add('bg-indigo-50');
+            lastSelectedCheckbox = checkbox;
+        }
+
+        accordions[0].click();
+        updateProgress();
+    });
+    </script>
+</body>
+</html>
